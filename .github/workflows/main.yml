@@ -2,7 +2,7 @@ name: CI-CD Demo
 
 on:
   push:
-      branches: [ main ]
+    branches: [ main ]
 
 jobs:
   pipeline-jobs:
@@ -14,35 +14,37 @@ jobs:
 
     - name: Run Shellcheck on healthcheck script
       run:  |
-          sudo apt-get update && sudo apt-get install -y shellcheck
-          shellcheck healthcheck.sh
+        sudo apt-get update && sudo apt-get install -y shellcheck
+        shellcheck healthcheck.sh
     
     - name: Build Docker Image
       run:  |
-          SHORT_SHA=$(echo "${{ github.sha }}"  |  cut -c1-7)
-          LOCAL_IMAGE="myapp:$SHORT_SHA"
-          echo "Building image with tag: $IMAGE_TAG"
-          docker build -t $LOCAL_IMAGE .
+        SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+       
+        echo "IMAGE_NAME=myapp:$SHORT_SHA" >> $GITHUB_ENV
+        
+        echo "Building image with tag: myapp:$SHORT_SHA"
+        docker build -t myapp:$SHORT_SHA .
 
     - name: Run Container Smoke Test
       run:  |
-          echo  "Starting container smoke test..."
+        echo "Starting container smoke test..."
 
-          docker run -d  --name web -p 8080:80 nginx:alpine
-          sleep 2
+        docker run -d --name web -p 8080:80 nginx:alpine
+        sleep 3
 
-          echo "Testing with an external URL (Google)..."
-          docker run --rm $LOCAL_IMAGE "https://google.com"
+        echo "Testing with an external URL (Google)..."
+        docker run --rm ${{ env.IMAGE_NAME }} "https://google.com"
 
+  
+        echo "Testing with localhost..."
+        docker run --rm --network="host" ${{ env.IMAGE_NAME }} "http://localhost:8080"
 
-          echo "Testing with localhost..."
-          docker run --rm --network="host"  $LOCAL_IMAGE "http://localhost:8080"
-
-          docker stop web && docker rm web
-
+        docker stop web && docker rm web
 
     - name: Secure Variable Usage
       env:
-        DB_PASSWORD:  ${{ secrets.MY_DB_PASS }}
+        DB_PASSWORD: ${{ secrets.MY_DB_PASS }} 
       run:  |
-        echo  "Validating environment variables."
+        echo "Validating environment variables."
+        
