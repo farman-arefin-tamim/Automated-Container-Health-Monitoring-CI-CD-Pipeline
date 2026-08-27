@@ -20,7 +20,7 @@ jobs:
     - name: Build Docker Image
       run:  |
           SHORT_SHA=$(echo "${{ github.sha }}"  |  cut -c1-7)
-          IMAGE_TAG="myapp:$SHORT_SHA"
+          LOCAL_IMAGE="myapp:$SHORT_SHA"
           echo "Building image with tag: $IMAGE_TAG"
           docker build -t $IMAGE_TAG .
 
@@ -32,11 +32,11 @@ jobs:
           sleep 2
 
           echo "Testing with an external URL (Google)..."
-          docker run --rm ${{ env.IMAGE_NAME }} "https://google.com"
+          docker run --rm $LOCAL_IMAGE "https://google.com"
 
 
           echo "Testing with localhost..."
-          docker run --rm --network="host"  ${{ env.IMAGE_NAME }} "http://localhost:8080"
+          docker run --rm --network="host"  $LOCAL_IMAGE "http://localhost:8080"
 
           docker stop web && docker rm web
 
