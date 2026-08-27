@@ -22,7 +22,7 @@ jobs:
           SHORT_SHA=$(echo "${{ github.sha }}"  |  cut -c1-7)
           LOCAL_IMAGE="myapp:$SHORT_SHA"
           echo "Building image with tag: $IMAGE_TAG"
-          docker build -t $IMAGE_TAG .
+          docker build -t $LOCAL_IMAGE .
 
     - name: Run Container Smoke Test
       run:  |
