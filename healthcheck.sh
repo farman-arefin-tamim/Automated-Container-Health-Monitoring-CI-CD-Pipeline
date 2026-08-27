@@ -29,7 +29,7 @@ echo "Status: $status"
 echo "Response time: ${response_time}s"
 
 if [ "$status" -ge 200 ] && [ "$status" -lt 400 ]; then
-        exit 1
+        exit 0
 else
         exit 1
 fi
