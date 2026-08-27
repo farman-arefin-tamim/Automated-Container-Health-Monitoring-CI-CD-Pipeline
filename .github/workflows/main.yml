@@ -1,0 +1,48 @@
+name: CI-CD Demo
+
+on:
+  push:
+      branches: [ main ]
+
+jobs:
+  pipeline-jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Run Shellcheck on healthcheck script
+      run:  |
+          sudo apt-get update && sudo apt-get install -y shellchekc
+          shellcheck healthcheck.sh
+    
+    - name: Build Docker Image
+      run:  |
+          SHORT_SHA=$(echo "${{ github.sha }}"  |  cut -c1-7)
+          IMAGE_TAG="myapp:$SHORT_SHA"
+          echo "Building image with tag: $IMAGE_TAG"
+          docker build -t $IMAGE_TAG .
+
+    - name: Run Container Smoke Test
+      run:  |
+          echo  "Starting container smoke test..."
+
+          docker run -d  --name web -p 8080:80 nginx:alpine
+          sleep 2
+
+          echo "Testing with an external URL (Google)..."
+          docker run --rm ${{ env.IMAGE_NAME }} "https://google.com"
+
+
+          echo "Testing with localhost..."
+          docker run --rm --network="host"  ${{ env.IMAGE_NAME }} "http://localhost:8080"
+
+          docker stop web && docker rm web
+
+
+    - name: Secure Variable Usage
+      env:
+        DB_PASSWORD:  ${{ secrets.MY_DB_PASS }}
+      run:  |
+        echo  "Validating environment variables."
